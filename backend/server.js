@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 import { testConnection } from './config/db.js';
+import { initializeSchema } from './config/schemaManager.js';
+import { testEmailConnection } from './utils/emailService.js';
 import authRoutes from './routes/authRoutes.js';
 import panRoutes from './routes/panRoutes.js';
 import form16Routes from './routes/form16Routes.js';
@@ -35,6 +37,8 @@ app.use((err, _req, res, _next) => {
 const startServer = async () => {
   try {
     await testConnection();
+    await initializeSchema();
+    await testEmailConnection();
     app.listen(PORT, () => {
       // eslint-disable-next-line no-console
       console.log(`Backend running on http://localhost:${PORT}`);

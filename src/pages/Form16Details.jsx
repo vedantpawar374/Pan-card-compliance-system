@@ -12,6 +12,7 @@ const Form16Details = () => {
       gross_salary: "",
       deductions: "",
       tds_deducted: "",
+      ais_tis_verified: "No",
     },
   );
   const [error, setError] = useState("");
@@ -163,6 +164,21 @@ const Form16Details = () => {
                 placeholder="e.g., 30000"
               />
               <small>Tax Deducted at Source from your salary</small>
+            </div>
+
+            <div className="form-group">
+              <label>AIS/TIS Verified *</label>
+              <select
+                name="ais_tis_verified"
+                value={formData.ais_tis_verified}
+                onChange={handleChange}
+              >
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+              <small>
+                Mark Yes only if AIS and TIS statements are already verified.
+              </small>
             </div>
 
             {/* Display Calculated Values */}

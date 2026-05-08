@@ -14,6 +14,7 @@ export const authApi = {
 
 export const panApi = {
   save: (payload) => api.post('/pan', payload),
+  validate: (payload) => api.post('/pan/validate', payload),
   getByUserId: (userId) => api.get(`/pan/${userId}`),
 };
 

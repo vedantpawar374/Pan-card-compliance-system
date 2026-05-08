@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS financial_year_rules (
     id INT AUTO_INCREMENT PRIMARY KEY,
     financial_year VARCHAR(20) UNIQUE NOT NULL,
     exemption_limit DECIMAL(10,2) NOT NULL,
+    tax_rate DECIMAL(5,2) NOT NULL DEFAULT 0,
+    tax_rule_note TEXT,
     itr_due_date DATE NOT NULL
 );
 
@@ -49,6 +51,7 @@ CREATE TABLE IF NOT EXISTS form16_details (
     deductions DECIMAL(10,2) DEFAULT 0,
     taxable_income DECIMAL(10,2),
     tds_deducted DECIMAL(10,2) DEFAULT 0,
+    ais_tis_verified VARCHAR(10) DEFAULT 'No',
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -60,8 +63,15 @@ CREATE TABLE IF NOT EXISTS tax_analysis (
     financial_year VARCHAR(20),
     taxable_income DECIMAL(10,2),
     tax_payable VARCHAR(10),
+    estimated_tax_amount DECIMAL(10,2) DEFAULT 0,
     itr_required VARCHAR(10),
+    tds_deducted DECIMAL(10,2) DEFAULT 0,
     refund_possible VARCHAR(10),
+    refund_amount DECIMAL(10,2) DEFAULT 0,
+    tax_due_amount DECIMAL(10,2) DEFAULT 0,
+    ais_tis_verification_required VARCHAR(10) DEFAULT 'No',
+    pan_aadhaar_issue VARCHAR(10) DEFAULT 'No',
+    overall_compliance_status VARCHAR(20) DEFAULT 'Pending',
     analysis_summary TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -108,10 +118,13 @@ ON DUPLICATE KEY UPDATE
     email = VALUES(email);
 
 INSERT INTO financial_year_rules
-(financial_year, exemption_limit, itr_due_date)
+(financial_year, exemption_limit, tax_rate, tax_rule_note, itr_due_date)
 VALUES
-('2024-25', 300000.00, '2025-07-31'),
-('2025-26', 300000.00, '2026-07-31')
+('2024-25', 300000.00, 5.00, 'Simplified rule for mini-project tax analysis.', '2025-07-31'),
+('2025-26', 300000.00, 7.50, 'Salaried user rule for FY 2025-26.', '2026-07-31'),
+('2026-27', 300000.00, 10.00, 'Expanded tax rate for FY 2026-27.', '2027-07-31')
 ON DUPLICATE KEY UPDATE
     exemption_limit = VALUES(exemption_limit),
+    tax_rate = VALUES(tax_rate),
+    tax_rule_note = VALUES(tax_rule_note),
     itr_due_date = VALUES(itr_due_date);

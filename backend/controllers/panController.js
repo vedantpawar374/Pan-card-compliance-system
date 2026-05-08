@@ -163,3 +163,56 @@ export const getPanDetailsByUserId = async (req, res) => {
     return res.status(500).json({ message: 'Failed to fetch PAN details.', error: error.message });
   }
 };
+
+export const validatePanNumber = async (req, res) => {
+  try {
+    const { user_id, pan_number } = req.body;
+
+    if (!user_id || !pan_number) {
+      return res.status(400).json({ message: 'user_id and pan_number are required.' });
+    }
+
+    const normalizedPan = String(pan_number).trim().toUpperCase();
+
+    const [masterRows] = await pool.query(
+      `SELECT pan_number, full_name, dob
+       FROM pan_master_records
+       WHERE pan_number = ?
+       LIMIT 1`,
+      [normalizedPan]
+    );
+
+    if (masterRows.length === 0) {
+      return res.status(400).json({ message: 'Invalid PAN card number.' });
+    }
+
+    const master = masterRows[0];
+    const [existingRows] = await pool.query('SELECT id FROM pan_details WHERE user_id = ?', [user_id]);
+
+    if (existingRows.length > 0) {
+      await pool.query(
+        `UPDATE pan_details
+         SET pan_number = ?,
+             name_on_pan = ?,
+             dob = ?,
+             verification_status = 'Verified',
+             mismatch_reason = NULL,
+             verified_at = NOW()
+         WHERE user_id = ?`,
+        [normalizedPan, master.full_name, toNormalizedDate(master.dob), user_id]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO pan_details
+         (user_id, pan_number, name_on_pan, dob, verification_status, mismatch_reason, verified_at)
+         VALUES (?, ?, ?, ?, 'Verified', NULL, NOW())`,
+        [user_id, normalizedPan, master.full_name, toNormalizedDate(master.dob)]
+      );
+    }
+
+    const savedRow = await fetchPanDetailsWithMaster(user_id);
+    return res.status(200).json(savedRow);
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to validate PAN number.', error: error.message });
+  }
+};

@@ -14,6 +14,8 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingTasksCount, setPendingTasksCount] = useState(0);
+  const [emailReminderSent, setEmailReminderSent] = useState(false);
 
   const [panData, setPanData] = useState(null);
   const [form16Data, setForm16Data] = useState(null);
@@ -23,6 +25,10 @@ export const AppProvider = ({ children }) => {
   const handleLogin = (userData) => {
     setUser(userData);
     setIsLoggedIn(true);
+    setPendingTasksCount(userData.pending_tasks_count || 0);
+    if (userData.pending_tasks_count > 0) {
+      setEmailReminderSent(true);
+    }
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
@@ -33,6 +39,8 @@ export const AppProvider = ({ children }) => {
     setForm16Data(null);
     setTaxAnalysis(null);
     setComplianceTasks([]);
+    setPendingTasksCount(0);
+    setEmailReminderSent(false);
     localStorage.removeItem("user");
   };
 
@@ -122,6 +130,31 @@ export const AppProvider = ({ children }) => {
     return response.data;
   };
 
+  const validatePanFromDashboard = async (panNumber) => {
+    if (!user?.id) {
+      throw new Error("Please login first.");
+    }
+
+    const response = await panApi.validate({
+      user_id: user.id,
+      pan_number: panNumber,
+    });
+
+    const saved = response.data;
+    setPanData({
+      ...saved,
+      aadhaar_linked:
+        saved.aadhaar_linked ||
+        (saved.aadhaar_linked_status === "Linked"
+          ? "Yes"
+          : saved.aadhaar_linked_status === "Not Linked"
+            ? "No"
+            : "Unknown"),
+    });
+
+    return saved;
+  };
+
   const savePanDetails = async (data) => {
     if (!user?.id) {
       throw new Error("Please login first.");
@@ -162,6 +195,7 @@ export const AppProvider = ({ children }) => {
       gross_salary: Number(data.gross_salary),
       deductions: Number(data.deductions),
       tds_deducted: Number(data.tds_deducted),
+      ais_tis_verified: data.ais_tis_verified,
     };
 
     const analysisResponse = await form16Api.save(payload);
@@ -203,10 +237,13 @@ export const AppProvider = ({ children }) => {
       form16Data,
       taxAnalysis,
       complianceTasks,
+      pendingTasksCount,
+      emailReminderSent,
       handleLogin,
       handleLogout,
       registerUser,
       loginUser,
+      validatePanFromDashboard,
       savePanDetails,
       saveForm16Details,
       updateTaskStatus,
@@ -219,6 +256,8 @@ export const AppProvider = ({ children }) => {
       form16Data,
       taxAnalysis,
       complianceTasks,
+      pendingTasksCount,
+      emailReminderSent,
     ],
   );
 
