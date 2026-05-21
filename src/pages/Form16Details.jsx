@@ -6,15 +6,34 @@ import "./Pages.css";
 const Form16Details = () => {
   const navigate = useNavigate();
   const { form16Data, saveForm16Details, panData } = useContext(AppContext);
+  const initialFormState = {
+    financial_year: "2024-25",
+    gross_salary: "",
+    deductions: "",
+    tds_deducted: "",
+    ais_tis_verified: "No",
+    employer_name: "",
+    employer_tan: "",
+    employee_pan: "",
+    employee_id: "",
+    tax_regime: "New",
+    basic_salary: "",
+    hra: "",
+    special_allowance: "",
+    form16_part: "Both",
+    deduction_80c: false,
+    deduction_health_insurance: false,
+    deduction_home_loan: false,
+    deduction_education_loan: false,
+    pan_verified: "Verified",
+    aadhaar_linked: "Linked",
+    form_verified: "Pending",
+  };
+
   const [formData, setFormData] = useState(
-    form16Data || {
-      financial_year: "2024-25",
-      gross_salary: "",
-      deductions: "",
-      tds_deducted: "",
-      ais_tis_verified: "No",
-    },
+    form16Data ? { ...initialFormState, ...form16Data } : initialFormState,
   );
+  const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,12 +56,16 @@ const Form16Details = () => {
   }
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value === "" ? "" : parseFloat(value) || value,
+      [name]: type === "checkbox" ? checked : value === "" ? "" : parseFloat(value) || value,
     }));
     setError("");
+  };
+
+  const handlePreview = () => {
+    setShowPreview(true);
   };
 
   const handleSubmit = async (e) => {
@@ -117,6 +140,197 @@ const Form16Details = () => {
           {success && <div className="success-message">{success}</div>}
 
           <form onSubmit={handleSubmit}>
+            <div className="field-grid">
+              <div className="form-group">
+                <label>Employer Name</label>
+                <input
+                  type="text"
+                  name="employer_name"
+                  value={formData.employer_name}
+                  onChange={handleChange}
+                  placeholder="e.g., ABC Pvt Ltd"
+                />
+              </div>
+              <div className="form-group">
+                <label>Employer TAN Number</label>
+                <input
+                  type="text"
+                  name="employer_tan"
+                  value={formData.employer_tan}
+                  onChange={handleChange}
+                  placeholder="e.g., ABCDE1234F"
+                />
+              </div>
+            </div>
+
+            <div className="section-heading">
+              <h2>Employee Information</h2>
+            </div>
+            <div className="field-grid">
+              <div className="form-group">
+                <label>Employee PAN Number</label>
+                <input
+                  type="text"
+                  name="employee_pan"
+                  value={formData.employee_pan}
+                  onChange={handleChange}
+                  placeholder="e.g., QWERT1234A"
+                />
+              </div>
+              <div className="form-group">
+                <label>Employee ID (Optional)</label>
+                <input
+                  type="text"
+                  name="employee_id"
+                  value={formData.employee_id}
+                  onChange={handleChange}
+                  placeholder="e.g., EMP-4567"
+                />
+              </div>
+            </div>
+
+            <div className="section-heading">
+              <h2>Tax Regime</h2>
+            </div>
+            <div className="radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name="tax_regime"
+                  value="Old"
+                  checked={formData.tax_regime === "Old"}
+                  onChange={handleChange}
+                />
+                Old Tax Regime
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="tax_regime"
+                  value="New"
+                  checked={formData.tax_regime === "New"}
+                  onChange={handleChange}
+                />
+                New Tax Regime
+              </label>
+            </div>
+
+            <div className="section-heading">
+              <h2>Salary Breakdown</h2>
+            </div>
+            <div className="field-grid">
+              <div className="form-group">
+                <label>Basic Salary</label>
+                <input
+                  type="number"
+                  name="basic_salary"
+                  value={formData.basic_salary}
+                  onChange={handleChange}
+                  placeholder="Optional"
+                />
+              </div>
+              <div className="form-group">
+                <label>HRA</label>
+                <input
+                  type="number"
+                  name="hra"
+                  value={formData.hra}
+                  onChange={handleChange}
+                  placeholder="Optional"
+                />
+              </div>
+              <div className="form-group">
+                <label>Special Allowance</label>
+                <input
+                  type="number"
+                  name="special_allowance"
+                  value={formData.special_allowance}
+                  onChange={handleChange}
+                  placeholder="Optional"
+                />
+              </div>
+            </div>
+
+            <div className="section-heading">
+              <h2>Form 16 Part Selection</h2>
+            </div>
+            <div className="radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name="form16_part"
+                  value="Part A"
+                  checked={formData.form16_part === "Part A"}
+                  onChange={handleChange}
+                />
+                Part A
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="form16_part"
+                  value="Part B"
+                  checked={formData.form16_part === "Part B"}
+                  onChange={handleChange}
+                />
+                Part B
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="form16_part"
+                  value="Both"
+                  checked={formData.form16_part === "Both"}
+                  onChange={handleChange}
+                />
+                Both
+              </label>
+            </div>
+
+            <div className="section-heading">
+              <h2>Additional Deductions</h2>
+            </div>
+            <div className="checkbox-grid">
+              <label>
+                <input
+                  type="checkbox"
+                  name="deduction_80c"
+                  checked={formData.deduction_80c}
+                  onChange={handleChange}
+                />
+                80C Deduction
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="deduction_health_insurance"
+                  checked={formData.deduction_health_insurance}
+                  onChange={handleChange}
+                />
+                Health Insurance
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="deduction_home_loan"
+                  checked={formData.deduction_home_loan}
+                  onChange={handleChange}
+                />
+                Home Loan
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="deduction_education_loan"
+                  checked={formData.deduction_education_loan}
+                  onChange={handleChange}
+                />
+                Education Loan
+              </label>
+            </div>
+
+            <div className="section-divider" />
+
             <div className="form-group">
               <label>Financial Year</label>
               <select
@@ -205,29 +419,79 @@ const Form16Details = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Saving..." : "Save Income Details"}
-            </button>
+            <div className="button-row">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handlePreview}
+              >
+                Generate Preview
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Saving..." : "Save Income Details"}
+              </button>
+            </div>
+
+            {showPreview && (
+              <div className="preview-section">
+                <h4>Form 16 Preview</h4>
+                <p>This preview shows the selected Form 16 settings and salary breakdown.</p>
+                <div className="status-row">
+                  <div>
+                    <strong>Tax Regime:</strong> {formData.tax_regime}
+                  </div>
+                  <div>
+                    <strong>Form 16 Part:</strong> {formData.form16_part}
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         </div>
 
         {/* Info Card */}
         <div className="info-card">
-          <h3>ℹ️ About Form 16</h3>
-          <p>
-            Form 16 is a certificate of tax deducted at source (TDS) issued by
-            your employer.
-          </p>
-          <ul>
-            <li>Issued by employer on request</li>
-            <li>Contains your salary and TDS details</li>
-            <li>Essential for ITR filing</li>
-            <li>Must be issued before July 15th of financial year-end</li>
+          <h3>📄 Form 16 Required Documents</h3>
+          <ul className="document-list">
+            <li>
+              <span className="document-item-icon">✓</span>
+              PAN Card
+            </li>
+            <li>
+              <span className="document-item-icon">✓</span>
+              Aadhaar Card
+            </li>
+            <li>
+              <span className="document-item-icon">✓</span>
+              Salary Slips
+            </li>
+            <li>
+              <span className="document-item-icon">✓</span>
+              Bank Details
+            </li>
           </ul>
+
+          <div className="section-heading section-heading-small">
+            <h4>Verification Status</h4>
+          </div>
+          <div className="status-grid">
+            <div className="status-badge">
+              <span>PAN Verified</span>
+              <strong>{formData.pan_verified}</strong>
+            </div>
+            <div className="status-badge">
+              <span>Aadhaar Linked</span>
+              <strong>{formData.aadhaar_linked}</strong>
+            </div>
+            <div className="status-badge">
+              <span>Form Verified</span>
+              <strong>{formData.form_verified}</strong>
+            </div>
+          </div>
         </div>
       </div>
     </div>

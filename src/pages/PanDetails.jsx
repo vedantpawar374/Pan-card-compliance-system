@@ -5,7 +5,7 @@ import "./Pages.css";
 
 const PanDetails = () => {
   const navigate = useNavigate();
-  const { panData, savePanDetails } = useContext(AppContext);
+  const { panData, savePanDetails, extractPanFromImage } = useContext(AppContext);
   const [formData, setFormData] = useState(
     panData || {
       pan_number: "",
@@ -15,6 +15,9 @@ const PanDetails = () => {
   );
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [ocrError, setOcrError] = useState("");
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [selectedPanImage, setSelectedPanImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
@@ -30,6 +33,66 @@ const PanDetails = () => {
     // PAN format: AAAPL5055K
     const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
     return panRegex.test(pan);
+  };
+
+  const formatDobForDateInput = (dobText) => {
+    if (!dobText) {
+      return "";
+    }
+
+    const dobMatch = dobText.match(/^(\d{2})[\/\-\.\s](\d{2})[\/\-\.\s](\d{4})$/);
+    if (dobMatch) {
+      const [, dd, mm, yyyy] = dobMatch;
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    const dobMatchText = dobText.match(/^(\d{2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+    if (dobMatchText) {
+      const [, dd, mon, yyyy] = dobMatchText;
+      const month = new Date(`${mon} 1, ${yyyy}`).getMonth() + 1;
+      if (month >= 1 && month <= 12) {
+        return `${yyyy}-${String(month).padStart(2, '0')}-${dd}`;
+      }
+    }
+
+    return dobText;
+  };
+
+  const handleImageChange = (e) => {
+    setSelectedPanImage(e.target.files?.[0] || null);
+    setOcrError("");
+    setSuccess("");
+  };
+
+  const handleOcrExtract = async () => {
+    if (!selectedPanImage) {
+      setOcrError("Please select a PAN image file to extract details.");
+      return;
+    }
+
+    try {
+      setOcrLoading(true);
+      setOcrError("");
+      setSuccess("");
+
+      const extracted = await extractPanFromImage(selectedPanImage);
+      setFormData((prev) => ({
+        ...prev,
+        pan_number: extracted.pan_number || prev.pan_number,
+        name_on_pan: extracted.full_name || prev.name_on_pan,
+        dob: formatDobForDateInput(extracted.date_of_birth) || prev.dob,
+      }));
+
+      if (!extracted.pan_number && !extracted.full_name && !extracted.date_of_birth) {
+        setOcrError("No readable PAN details were detected from the image.");
+      } else {
+        setSuccess("PAN details extracted successfully from image.");
+      }
+    } catch (err) {
+      setOcrError(err?.response?.data?.message || "Failed to extract text from the PAN image.");
+    } finally {
+      setOcrLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -78,7 +141,22 @@ const PanDetails = () => {
           <p className="form-subtitle">Please enter your PAN card details</p>
 
           {error && <div className="error-message">{error}</div>}
+          {ocrError && <div className="error-message">{ocrError}</div>}
           {success && <div className="success-message">{success}</div>}
+
+          <div className="form-group">
+            <label>Upload PAN Image</label>
+            <input type="file" accept="image/*" onChange={handleImageChange} />
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleOcrExtract}
+              disabled={ocrLoading}
+              style={{ marginTop: '0.5rem' }}
+            >
+              {ocrLoading ? 'Extracting...' : 'Extract PAN from Image'}
+            </button>
+          </div>
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">

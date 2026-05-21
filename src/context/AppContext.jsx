@@ -3,6 +3,7 @@ import {
   analysisApi,
   authApi,
   form16Api,
+  ocrApi,
   panApi,
   tasksApi,
 } from "../services/api";
@@ -215,6 +216,19 @@ export const AppProvider = ({ children }) => {
     return analysisResponse.data;
   };
 
+  const extractPanFromImage = async (file) => {
+    if (!user?.id) {
+      throw new Error("Please login first.");
+    }
+
+    const formData = new FormData();
+    formData.append('pan_image', file);
+    formData.append('user_id', user.id);
+
+    const response = await ocrApi.uploadPanImage(formData);
+    return response.data;
+  };
+
   const updateTaskStatus = async (taskId) => {
     const response = await tasksApi.markComplete(taskId);
     const updatedTask = response.data;
@@ -244,6 +258,7 @@ export const AppProvider = ({ children }) => {
       registerUser,
       loginUser,
       validatePanFromDashboard,
+      extractPanFromImage,
       savePanDetails,
       saveForm16Details,
       updateTaskStatus,
