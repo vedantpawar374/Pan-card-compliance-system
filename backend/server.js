@@ -8,7 +8,6 @@ import { initializeSchema } from './config/schemaManager.js';
 import { testEmailConnection } from './utils/emailService.js';
 import authRoutes from './routes/authRoutes.js';
 import panRoutes from './routes/panRoutes.js';
-import ocrRoutes from './routes/ocrRoutes.js';
 import form16Routes from './routes/form16Routes.js';
 import analysisRoutes from './routes/analysisRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
@@ -27,7 +26,6 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/pan', panRoutes);
-app.use('/api/ocr', ocrRoutes);
 app.use('/api/form16', form16Routes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/tasks', taskRoutes);
