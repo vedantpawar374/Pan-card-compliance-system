@@ -18,6 +18,15 @@ export const panApi = {
   getByUserId: (userId) => api.get(`/pan/${userId}`),
 };
 
+export const ocrApi = {
+  uploadPanImage: (formData) =>
+    api.post('/ocr/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+};
+
 export const form16Api = {
   save: (payload) => api.post('/form16', payload),
   getByUserId: (userId) => api.get(`/form16/${userId}`),
